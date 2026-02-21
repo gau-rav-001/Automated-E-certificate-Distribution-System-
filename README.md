@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🎓 Certificate Distribution System
 
 A user-friendly Streamlit app to generate and email personalized certificates.
@@ -59,3 +60,7 @@ If your text appears in the wrong place, adjust X and Y values:
 - **X** = distance from left edge (pixels)
 - **Y** = distance from bottom edge (pixels)
 - Use the **Center-align** checkboxes for centered text regardless of name length
+=======
+# Automated-E-certificate-Distribution-System-
+Certificate Distribution System is a Streamlit-based application that automates certificate generation and emailing. It reads participant data from CSV, overlays names and departments onto a PDF template, and sends personalized certificates via Gmail SMTP. It includes progress tracking, logging, and customizable layout settings.
+>>>>>>> f061381a4b9ca0f8cbd939f70f563c7abb77ad97
