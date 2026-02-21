@@ -1,66 +1,127 @@
-<<<<<<< HEAD
-# 🎓 Certificate Distribution System
+# 🎓 Automated E-Certificate Distribution System
 
-A user-friendly Streamlit app to generate and email personalized certificates.
+A Streamlit-based web application that automates the generation and distribution of personalized certificates via email. This system reads participant data from a CSV file, overlays names and departments onto a certificate template, and sends certificates automatically using Gmail SMTP.
 
 ---
 
-## ⚙️ Setup (One Time)
+## 🚀 Features
 
-**1. Install dependencies:**
-```bash
+* 📋 Upload participant data using CSV
+* 📄 Use a custom certificate template (PDF)
+* ✍️ Automatically generate personalized certificates
+* 📧 Send certificates via Gmail SMTP
+* ⚙️ Adjustable text position and font size
+* 📊 Progress tracking and send logs
+* 🛡️ Error handling for invalid emails
+* ⏱️ Configurable delay between emails
+
+---
+
+## 🛠️ Tech Stack
+
+* Python
+* Streamlit
+* Pandas
+* ReportLab
+* PyPDF2
+* SMTP (Gmail)
+* Email MIME libraries
+
+---
+
+## 📂 Project Structure
+
+```
+Automated-E-certificate-Distribution-System-
+│
+├── app.py
+├── requirements.txt
+├── README.md
+├── sample.csv
+└── .gitignore
+```
+
+---
+
+## ⚙️ Installation
+
+### 1. Clone the repository
+
+```
+git clone https://github.com/gau-rav-001/Automated-E-certificate-Distribution-System-.git
+cd Automated-E-certificate-Distribution-System-
+```
+
+### 2. Create virtual environment
+
+```
+python -m venv .venv
+.venv\Scripts\activate
+```
+
+### 3. Install dependencies
+
+```
 pip install -r requirements.txt
 ```
 
-**2. Run the app:**
-```bash
+---
+
+## ▶️ Run the application
+
+```
 streamlit run app.py
 ```
 
-Your browser will open automatically at `http://localhost:8501`
-
 ---
 
-## 🚀 How to Use
+## 📧 Gmail Setup
 
-1. **Enter your Gmail** and App Password in the sidebar
-2. **Upload your CSV** (must have name, department, email columns)
-3. **Upload your certificate PDF template**
-4. **Map your CSV columns** to Name / Department / Email
-5. **Adjust text positions** (X, Y coordinates) to match your template
-6. **Write your email subject and body** (use `{name}` for personalization)
-7. **Click Send All** and watch the live progress!
+To send emails, you must use a Gmail App Password:
+
+1. Go to https://myaccount.google.com/security
+2. Enable 2-Step Verification
+3. Generate App Password
+4. Use that password in the app
 
 ---
 
 ## 📋 CSV Format Example
 
-| candidates_name | organisation_name | candidates_email |
-|---|---|---|
-| John Doe | Computer Engineering | john@example.com |
-| Jane Smith | Mechanical Engineering | jane@example.com |
-
-Any column names work — you'll map them in the app.
-
----
-
-## 🔑 Gmail App Password
-
-1. Go to [myaccount.google.com](https://myaccount.google.com)
-2. Security → 2-Step Verification → App Passwords
-3. Generate a password for "Mail"
-4. Paste it in the sidebar (spaces are OK)
+```
+Name,Department,Email
+John Doe,Computer Engineering,john@email.com
+Jane Smith,IT,jane@email.com
+```
 
 ---
 
-## 📍 Finding Text Positions
+## 🎯 Use Case
 
-The default X/Y values are set for a standard A4 landscape certificate.  
-If your text appears in the wrong place, adjust X and Y values:
-- **X** = distance from left edge (pixels)
-- **Y** = distance from bottom edge (pixels)
-- Use the **Center-align** checkboxes for centered text regardless of name length
-=======
-# Automated-E-certificate-Distribution-System-
-Certificate Distribution System is a Streamlit-based application that automates certificate generation and emailing. It reads participant data from CSV, overlays names and departments onto a PDF template, and sends personalized certificates via Gmail SMTP. It includes progress tracking, logging, and customizable layout settings.
->>>>>>> f061381a4b9ca0f8cbd939f70f563c7abb77ad97
+* College events
+* Workshops
+* Certifications
+* Online courses
+* Hackathons
+
+---
+
+## 👨‍💻 Author
+
+**Gaurav Kumbhare**
+
+GitHub: https://github.com/gau-rav-001
+
+---
+
+## ⭐ Contribution
+
+Feel free to fork this project and improve it.
+
+---
+
+## 📜 License
+
+This project is open source and available under the MIT License.
+
+---
