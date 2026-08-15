@@ -2,8 +2,10 @@ import streamlit as st
 import pandas as pd
 import smtplib
 import os
+import io
 import time
 import tempfile
+import fitz  # PyMuPDF - rasterizes the PDF for the live preview
 
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import landscape, A4
@@ -12,6 +14,57 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email import encoders
+
+
+# ── CERTIFICATE BUILDING (shared by preview + send) ──
+def build_certificate_pdf(template_bytes, name, dept,
+                           name_x, name_y, name_size, center_name,
+                           dept_x, dept_y, dept_size, center_dept):
+    """
+    Overlay Name & Department onto the template PDF and return the
+    merged single-page PDF as bytes. Used by both the live preview
+    and the certificates actually emailed, so the preview always
+    matches the real output.
+    """
+    template_reader = PdfReader(io.BytesIO(template_bytes))
+    template_page = template_reader.pages[0]
+
+    # Use the template's ACTUAL page size (not a hardcoded A4 landscape)
+    # so overlay coordinates always line up with the uploaded template.
+    page_width = float(template_page.mediabox.width)
+    page_height = float(template_page.mediabox.height)
+
+    overlay_buffer = io.BytesIO()
+    c = canvas.Canvas(overlay_buffer, pagesize=(page_width, page_height))
+
+    c.setFont("Helvetica-Bold", name_size)
+    tw = c.stringWidth(name, "Helvetica-Bold", name_size)
+    c.drawString(page_width / 2 - tw / 2 if center_name else name_x, name_y, name)
+
+    c.setFont("Helvetica", dept_size)
+    tw = c.stringWidth(dept, "Helvetica", dept_size)
+    c.drawString(page_width / 2 - tw / 2 if center_dept else dept_x, dept_y, dept)
+
+    c.save()
+    overlay_buffer.seek(0)
+
+    overlay_reader = PdfReader(overlay_buffer)
+    writer = PdfWriter()
+    template_page.merge_page(overlay_reader.pages[0])
+    writer.add_page(template_page)
+
+    out_buffer = io.BytesIO()
+    writer.write(out_buffer)
+    return out_buffer.getvalue()
+
+
+@st.cache_data(show_spinner=False)
+def render_pdf_preview(pdf_bytes, dpi=140):
+    """Rasterize page 1 of a PDF to PNG bytes for on-screen preview."""
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    pix = doc[0].get_pixmap(dpi=dpi)
+    return pix.tobytes("png")
+
 
 st.set_page_config(
     page_title="AutoCertify",
@@ -647,6 +700,45 @@ with p2:
     with dc: dept_size = st.number_input("Size", value=14,  step=1, key="ds", min_value=6, max_value=72)
     center_dept = st.checkbox("Center-align Dept", value=False)
 
+st.markdown("""
+<div style='font-family:"Space Mono",monospace;font-size:0.72rem;font-weight:700;
+            letter-spacing:0.12em;text-transform:uppercase;color:#f5c842;
+            margin:1.1rem 0 0.6rem;'>
+  👁 Live Preview
+</div>
+""", unsafe_allow_html=True)
+
+if template_pdf:
+    preview_name = "John Doe"
+    preview_dept = "Sample Department"
+    if data is not None and len(data) > 0:
+        try:
+            preview_name = str(data.iloc[0][name_col]).strip()
+            preview_dept = str(data.iloc[0][dept_col]).strip()
+        except Exception:
+            pass
+
+    template_bytes = template_pdf.getvalue()
+
+    try:
+        preview_pdf_bytes = build_certificate_pdf(
+            template_bytes, preview_name, preview_dept,
+            name_x, name_y, name_size, center_name,
+            dept_x, dept_y, dept_size, center_dept
+        )
+        preview_png = render_pdf_preview(preview_pdf_bytes)
+        st.image(preview_png, use_container_width=True)
+        st.markdown(f"""
+        <div class="hint-pill">
+          ✦ Previewing with <code>{preview_name}</code> / <code>{preview_dept}</code> —
+          updates live as you adjust the sliders above.
+        </div>
+        """, unsafe_allow_html=True)
+    except Exception as e:
+        st.warning(f"Couldn't render preview: {e}")
+else:
+    st.caption("Upload a certificate template in Step 1 to see a live preview here.")
+
 # ── STEP 4 ────────────────────────────────────
 st.markdown("""
 <div class="step-card">
@@ -716,12 +808,8 @@ send_clicked = st.button("🚀  LAUNCH — Send All Certificates", disabled=not 
 
 # ── SEND ──────────────────────────────────────
 if send_clicked:
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-        tmp.write(template_pdf.read())
-        template_path = tmp.name
-
+    template_bytes = template_pdf.getvalue()
     output_folder = tempfile.mkdtemp()
-    overlay_path  = os.path.join(output_folder, "overlay.pdf")
 
     st.markdown("<hr>", unsafe_allow_html=True)
     st.markdown("""
@@ -757,23 +845,15 @@ if send_clicked:
                 failed += 1
                 continue
 
-            c  = canvas.Canvas(overlay_path, pagesize=landscape(A4))
-            pw = landscape(A4)[0]
-            c.setFont("Helvetica-Bold", name_size)
-            tw = c.stringWidth(name, "Helvetica-Bold", name_size)
-            c.drawString(pw/2 - tw/2 if center_name else name_x, name_y, name)
-            c.setFont("Helvetica", dept_size)
-            tw = c.stringWidth(dept, "Helvetica", dept_size)
-            c.drawString(pw/2 - tw/2 if center_dept else dept_x, dept_y, dept)
-            c.save()
-
-            tr = PdfReader(template_path); ov = PdfReader(overlay_path)
-            wr = PdfWriter(); pg = tr.pages[0]
-            pg.merge_page(ov.pages[0]); wr.add_page(pg)
+            pdf_bytes = build_certificate_pdf(
+                template_bytes, name, dept,
+                name_x, name_y, name_size, center_name,
+                dept_x, dept_y, dept_size, center_dept
+            )
 
             safe = "".join(ch for ch in name if ch.isalnum() or ch in (" ", "_")).rstrip()
             cert_path = os.path.join(output_folder, f"{safe}.pdf")
-            with open(cert_path, "wb") as f: wr.write(f)
+            with open(cert_path, "wb") as f: f.write(pdf_bytes)
 
             msg = MIMEMultipart()
             msg['From'], msg['To'], msg['Subject'] = sender_email, email, email_subject
