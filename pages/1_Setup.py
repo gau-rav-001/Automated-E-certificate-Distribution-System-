@@ -41,7 +41,7 @@ with gc2:
 
 if st.session_state.sender_email and st.session_state.app_password:
     st.markdown(f"""
-    <div class="status-badge status-ready">
+    <div class="status-badge status-ready pulse-once">
       <span style="width:6px;height:6px;border-radius:50%;background:var(--good);display:inline-block;flex-shrink:0;"></span>
       Ready · {st.session_state.sender_email}
     </div>

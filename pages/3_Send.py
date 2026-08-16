@@ -164,7 +164,7 @@ if send_clicked:
             unsafe_allow_html=True,
         )
         log_placeholder.markdown(
-            '<div class="log-box">' + "\n".join(logs[-14:]) + "</div>",
+            '<div class="log-box">' + "".join(f'<div class="log-line">{line}</div>' for line in logs[-14:]) + "</div>",
             unsafe_allow_html=True,
         )
         time.sleep(ss.delay)
@@ -181,4 +181,7 @@ if send_clicked:
     """, unsafe_allow_html=True)
 
     with st.expander("Full delivery log"):
-        st.markdown('<div class="log-box">' + "\n".join(logs) + "</div>", unsafe_allow_html=True)
+        st.markdown(
+            '<div class="log-box">' + "".join(f'<div class="log-line">{line}</div>' for line in logs) + "</div>",
+            unsafe_allow_html=True,
+        )

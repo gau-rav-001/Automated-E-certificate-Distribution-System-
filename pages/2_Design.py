@@ -2,16 +2,29 @@ import io
 import pandas as pd
 import streamlit as st
 from common import (
-    inject_base_css, brand_header, render_stepper, render_background_orbs, page_header, init_session_state,
+    inject_base_css, brand_header, render_stepper, page_header, init_session_state,
     build_certificate_pdf, render_pdf_preview,
 )
 
 st.set_page_config(page_title="Design · AutoCertify", page_icon="🎓", layout="wide", initial_sidebar_state="collapsed")
 init_session_state()
 inject_base_css()
-render_background_orbs()
 brand_header()
 render_stepper("design")
+
+# Design-page-only motion: no ambient/orbiting background here (this page is
+# about *seeing changes happen*, so it stays calm and doesn't compete with
+# the live preview), a stronger focus ring on position inputs (precision
+# matters most here), and a "just updated" flash on the live preview image.
+st.markdown("""
+<style>
+[data-testid="stAppViewContainer"]::before { animation:none !important; opacity:0.35 !important; }
+[data-testid="stNumberInput"] input:focus {
+  box-shadow:0 0 0 4px rgba(255,255,255,0.14) !important;
+}
+[data-testid="stImage"] img { animation:previewFlash 0.35s ease-out; border-radius:10px; }
+</style>
+""", unsafe_allow_html=True)
 
 if not (st.session_state.csv_bytes and st.session_state.template_bytes):
     st.markdown("""
